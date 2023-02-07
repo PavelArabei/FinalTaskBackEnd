@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   controllers: [AppController],
@@ -12,6 +13,7 @@ import { UsersModule } from './users/users.module';
     MongooseModule.forRoot(
       'mongodb+srv://Pashtet:FInalTask369350@cluster0.z8u3ut3.mongodb.net/users?retryWrites=true&w=majority',
     ),
+    MessagesModule,
   ],
 })
 export class AppModule {}
