@@ -20,10 +20,6 @@ export class MessagesGateway {
   server: Server;
   constructor(private readonly messagesService: MessagesService) {}
 
-  @SubscribeMessage('newMessage')
-  onNewMessage(@MessageBody() body: any) {
-    console.log(body);
-  }
   @SubscribeMessage('createMessage')
   async create(
     @MessageBody() createMessageDto: CreateMessageDto,
@@ -40,7 +36,7 @@ export class MessagesGateway {
   }
 
   @SubscribeMessage('findAllMessages')
-  findAll() {
+  async findAll() {
     return this.messagesService.findAll();
   }
 
@@ -50,12 +46,15 @@ export class MessagesGateway {
   }
 
   @SubscribeMessage('removeMessage')
-  remove(@MessageBody() id: number) {
-    return this.messagesService.remove(id);
+  async remove(@MessageBody() text: string, @ConnectedSocket() client: Socket) {
+    const messages = this.messagesService.remove(client.id, text);
+    this.server.emit('removeMessage', messages);
+
+    return messages;
   }
 
   @SubscribeMessage('join')
-  joinRoom(
+  async joinRoom(
     @MessageBody('name') name: string,
     @ConnectedSocket() client: Socket,
   ) {
@@ -68,6 +67,7 @@ export class MessagesGateway {
     @ConnectedSocket() client: Socket,
   ) {
     const name = await this.messagesService.getClientByName(client.id);
+
     client.broadcast.emit('typing', { name, isTyping });
   }
 }
