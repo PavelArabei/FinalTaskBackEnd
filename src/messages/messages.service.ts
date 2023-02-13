@@ -5,23 +5,25 @@ import { Model } from 'mongoose';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message, MessageDocument } from './schemas/message.scheme';
+import { User } from './entities/user.entity';
+import { words } from './const';
 
 @Injectable()
 export class MessagesService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
   ) {}
-  messages: Message[] = [{ name: 'Pavel', text: 'hey' }];
+  messages: Message[] = [];
   clientIdObj = {};
 
-  identify(name: string, clientId: string) {
-    this.clientIdObj[clientId] = name;
-
+  identify(user: User, clientId: string) {
+    this.clientIdObj[clientId] = user;
+    // return userName;
     return Object.values(this.clientIdObj);
   }
 
   getClientByName(clientId: string) {
-    return this.clientIdObj[clientId];
+    return this.clientIdObj[clientId].name;
   }
 
   async create(createMessageDto: CreateMessageDto, clientId: string) {
@@ -31,7 +33,7 @@ export class MessagesService {
     //const aLLusers = await this.messageModel.find().exec();
 
     const message = {
-      name: this.clientIdObj[clientId],
+      name: this.getClientByName(clientId),
       text: createMessageDto.text,
     };
     this.messages.push(message);
