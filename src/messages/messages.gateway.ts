@@ -4,6 +4,7 @@ import {
   MessageBody,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { User } from './entities/user.entity';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
@@ -54,11 +55,14 @@ export class MessagesGateway {
   }
 
   @SubscribeMessage('join')
-  async joinRoom(
-    @MessageBody('name') name: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    return this.messagesService.identify(name, client.id);
+  async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
+    user.id = client.id;
+
+    const Name = this.messagesService.identify(user, client.id);
+    console.log(Name);
+
+    // return this.messagesService.identify(name, client.id);
+    this.server.emit('join', Name);
   }
 
   @SubscribeMessage('typing')
