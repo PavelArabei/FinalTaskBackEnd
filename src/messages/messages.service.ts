@@ -12,7 +12,7 @@ import { words } from './const';
 export class MessagesService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
-  ) {}
+  ) { }
   messages: Message[] = [];
   clientIdObj = {};
 
@@ -20,6 +20,10 @@ export class MessagesService {
     this.clientIdObj[clientId] = user;
     // return userName;
     return Object.values(this.clientIdObj);
+  }
+
+  getClientsCount() {
+    return Object.values(this.clientIdObj).length;
   }
 
   getClientByName(clientId: string) {
@@ -60,5 +64,9 @@ export class MessagesService {
 
     this.messages.splice(Index, 1);
     return this.messages;
+  }
+
+  deleteUser(id: string) {
+    delete this.clientIdObj[id];
   }
 }

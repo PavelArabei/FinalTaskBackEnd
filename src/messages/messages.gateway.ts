@@ -10,6 +10,9 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Server, Socket } from 'socket.io';
 import { ConnectedSocket } from '@nestjs/websockets/decorators';
+import { config } from '../config';
+
+const { DEFAULT_PLAYERS, DEFAULT_TIMER } = config;
 
 @WebSocketGateway({
   cors: {
@@ -19,7 +22,9 @@ import { ConnectedSocket } from '@nestjs/websockets/decorators';
 export class MessagesGateway {
   @WebSocketServer()
   server: Server;
-  constructor(private readonly messagesService: MessagesService) {}
+  timeOut: NodeJS.Timeout;
+  config: any;
+  constructor(private readonly messagesService: MessagesService) { }
 
   @SubscribeMessage('createMessage')
   async create(
@@ -57,12 +62,18 @@ export class MessagesGateway {
   @SubscribeMessage('join')
   async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
     user.id = client.id;
-
     const Name = this.messagesService.identify(user, client.id);
-    console.log(Name);
-
-    // return this.messagesService.identify(name, client.id);
     this.server.emit('join', Name);
+    this.server.emit('roundStarted', {
+      round: 1,
+      currentLead: 'user1',
+      userCount: this.messagesService.getClientsCount(),
+    });
+    // if (this.readyToStart()) {
+    //calculate round and user turn
+    // this.server.emit('roundstarted', { round: 1, currentLead: 'user1' });
+    this.startTimer();
+    //}
   }
 
   @SubscribeMessage('typing')
@@ -73,5 +84,44 @@ export class MessagesGateway {
     const name = await this.messagesService.getClientByName(client.id);
 
     client.broadcast.emit('typing', { name, isTyping });
+  }
+
+  isRoundStarted = () => this.timeOut;
+
+  readyToStart = () =>
+    this.messagesService.getClientsCount() >= 2 && !this.isRoundStarted();
+
+  startTimer() {
+    const isRoundStarted =
+      !this.timeOut && this.messagesService.getClientsCount() >= 2;
+    // if (!isRoundStarted) {
+    this.timeOut = setTimeout(() => {
+      this.nextRound();
+      clearTimeout(this.timeOut);
+    }, DEFAULT_TIMER);
+    // }
+  }
+
+  nextRound() {
+    //todo
+    //если есть не все users съиграли, то скё
+    // this.server.emit('nextTurn', {
+    //   leadUser:userId,
+    // });
+    // иначе показать roundFinished  и score всех игроков
+    this.server.emit('roundFinished', {
+      users: Object.values(this.messagesService.clientIdObj),
+    });
+  }
+  @SubscribeMessage('join')
+  async userLeave(
+    @MessageBody() user: User,
+    @ConnectedSocket() client: Socket,
+  ) {
+    user.id = client.id;
+    this.messagesService.deleteUser(client.id);
+    client.emit('usersLogout', {
+      users: Object.values(this.messagesService.clientIdObj),
+    });
   }
 }
