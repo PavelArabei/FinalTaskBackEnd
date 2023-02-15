@@ -113,14 +113,12 @@ export class MessagesGateway {
       users: Object.values(this.messagesService.clientIdObj),
     });
   }
-  @SubscribeMessage('join')
-  async userLeave(
-    @MessageBody() user: User,
-    @ConnectedSocket() client: Socket,
-  ) {
-    user.id = client.id;
+
+  @SubscribeMessage('usersLeaved')
+  async userLeave( @ConnectedSocket() client: Socket,) {
     this.messagesService.deleteUser(client.id);
-    client.emit('usersLogout', {
+    client.disconnect();
+    this.server.emit('usersLeaved', {
       users: Object.values(this.messagesService.clientIdObj),
     });
   }
