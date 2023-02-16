@@ -10,11 +10,22 @@ import { words } from './const';
 
 @Injectable()
 export class MessagesService {
+  calculateScore() {
+    for (const client in this.clientIdObj) {
+      if (Object.prototype.hasOwnProperty.call(this.clientIdObj, client)) {
+        this.clientIdObj[client].currentScore += 500;
+      }
+    }
+    return Object.values(this.clientIdObj);
+  }
+
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
-  ) { }
+  ) {}
   messages: Message[] = [];
   clientIdObj = {};
+  round = 0;
+  lead: User[];
 
   identify(user: User, clientId: string) {
     this.clientIdObj[clientId] = user;
@@ -22,6 +33,19 @@ export class MessagesService {
     return Object.values(this.clientIdObj);
   }
 
+  changeRound() {
+    this.round++;
+    if (this.getClientsCount() < this.round) this.round = 0;
+  }
+
+  getCurrentLeadAndRaund() {
+    const users: User[] = Object.values(this.clientIdObj);
+
+    return {
+      users: users,
+      round: this.round,
+    };
+  }
   getClientsCount() {
     return Object.values(this.clientIdObj).length;
   }
@@ -54,7 +78,7 @@ export class MessagesService {
     return `This action updates a #${id} message`;
   }
 
-  remove(clientId: string, text: string) {
+  removeMessage(clientId: string, text: string) {
     const clientName = this.getClientByName(clientId);
 
     const Index = this.messages.findIndex(
