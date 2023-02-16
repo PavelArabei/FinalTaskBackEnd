@@ -72,7 +72,7 @@ export class MessagesGateway {
 
   @SubscribeMessage('removeMessage')
   async remove(@MessageBody() text: string, @ConnectedSocket() client: Socket) {
-    const messages = this.messagesService.remove(client.id, text);
+    const messages = this.messagesService.removeMessage(client.id, text);
     this.server.emit('removeMessage', messages);
 
     return messages;
@@ -129,7 +129,7 @@ export class MessagesGateway {
     // });
     // иначе показать roundFinished  и score всех игроков
     this.server.emit('roundFinished', {
-      users: Object.values(this.messagesService.clientIdObj),
+      users: this.messagesService.calculateScore(),
     });
   }
 
