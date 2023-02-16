@@ -24,7 +24,7 @@ export class MessagesGateway {
   server: Server;
   timeOut: NodeJS.Timeout;
   config: any;
-  constructor(private readonly messagesService: MessagesService) { }
+  constructor(private readonly messagesService: MessagesService) {}
 
   @SubscribeMessage('createMessage')
   async create(
@@ -64,16 +64,44 @@ export class MessagesGateway {
     user.id = client.id;
     const Name = this.messagesService.identify(user, client.id);
     this.server.emit('join', Name);
-    this.server.emit('roundStarted', {
-      round: 1,
-      currentLead: 'user1',
-      userCount: this.messagesService.getClientsCount(),
-    });
-    // if (this.readyToStart()) {
+    //this.server.emit('roundStarted', {
+    //  round: 1,
+    //  currentLead: 'user1',
+    //  userCount: this.messagesService.getClientsCount(),
+    //});
+
+    if (this.readyToStart()) {
+      //calculate round and user turn
+      const { users, round } = this.messagesService.getCurrentLeadAndRaund();
+
+      this.server.emit('roundStarted', {
+        round: round,
+        currentLead: users[round],
+        allPlayers: users,
+        // userCount: this.messagesService.getClientsCount(),
+      });
+      this.startTimer();
+    }
+  }
+
+  @SubscribeMessage('roundStarted')
+  async startRaund() {
+    console.log(77888);
+
+    this.messagesService.changeRound();
+    //if (this.readyToStart()) {
     //calculate round and user turn
-    // this.server.emit('roundstarted', { round: 1, currentLead: 'user1' });
+    const { users, round } = this.messagesService.getCurrentLeadAndRaund();
+
+    this.server.emit('roundStarted', {
+      round: round,
+      currentLead: users[round],
+      allPlayers: users,
+      // userCount: this.messagesService.getClientsCount(),
+    });
     this.startTimer();
     //}
+    //
   }
 
   @SubscribeMessage('typing')
@@ -94,12 +122,12 @@ export class MessagesGateway {
   startTimer() {
     const isRoundStarted =
       !this.timeOut && this.messagesService.getClientsCount() >= 2;
-    // if (!isRoundStarted) {
+    //if (!isRoundStarted) {
     this.timeOut = setTimeout(() => {
       this.nextRound();
       clearTimeout(this.timeOut);
     }, DEFAULT_TIMER);
-    // }
+    //}
   }
 
   nextRound() {
@@ -109,13 +137,14 @@ export class MessagesGateway {
     //   leadUser:userId,
     // });
     // иначе показать roundFinished  и score всех игроков
+
     this.server.emit('roundFinished', {
       users: Object.values(this.messagesService.clientIdObj),
     });
   }
 
   @SubscribeMessage('usersLeaved')
-  async userLeave( @ConnectedSocket() client: Socket,) {
+  async userLeave(@ConnectedSocket() client: Socket) {
     this.messagesService.deleteUser(client.id);
     client.disconnect();
     this.server.emit('usersLeaved', {
