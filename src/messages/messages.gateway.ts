@@ -14,6 +14,15 @@ import { config } from '../config';
 
 const { DEFAULT_PLAYERS, DEFAULT_TIMER } = config;
 
+class CanvasStep {
+  coords: {
+    x: number;
+    y: number;
+  }[];
+  lineWidth?: number;
+  strokeStyle?: string | CanvasGradient | CanvasPattern;
+}
+
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -25,6 +34,16 @@ export class MessagesGateway {
   timeOut: NodeJS.Timeout;
   config: any;
   constructor(private readonly messagesService: MessagesService) { }
+
+  @SubscribeMessage('canvasShare')
+  async getCanvasData(
+    @MessageBody() cavasData: CanvasStep[],
+    @ConnectedSocket() client: Socket,
+  ) {
+    console.log(1111);
+    console.log(client.id);
+    this.server.emit('message', cavasData);
+  }
 
   @SubscribeMessage('createMessage')
   async create(
@@ -115,7 +134,7 @@ export class MessagesGateway {
   }
 
   @SubscribeMessage('usersLeaved')
-  async userLeave( @ConnectedSocket() client: Socket,) {
+  async userLeave(@ConnectedSocket() client: Socket) {
     this.messagesService.deleteUser(client.id);
     client.disconnect();
     this.server.emit('usersLeaved', {
