@@ -24,6 +24,8 @@ export class MessagesService {
   ) {}
   messages: Message[] = [];
   clientIdObj = {};
+  round = 0;
+  lead: User[];
 
   identify(user: User, clientId: string) {
     this.clientIdObj[clientId] = user;
@@ -31,6 +33,19 @@ export class MessagesService {
     return Object.values(this.clientIdObj);
   }
 
+  changeRound() {
+    this.round++;
+    if (this.getClientsCount() < this.round) this.round = 0;
+  }
+
+  getCurrentLeadAndRaund() {
+    const users: User[] = Object.values(this.clientIdObj);
+
+    return {
+      users: users,
+      round: this.round,
+    };
+  }
   getClientsCount() {
     return Object.values(this.clientIdObj).length;
   }
