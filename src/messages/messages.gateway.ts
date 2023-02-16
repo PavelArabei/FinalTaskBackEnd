@@ -84,7 +84,7 @@ export class MessagesGateway {
     @MessageBody('isTyping') isTyping: boolean,
     @ConnectedSocket() client: Socket,
   ) {
-    const name = await this.gameService.getClientByName(client.id);
+    const name = this.gameService.getRoomUser(client.id).name;
 
     client.broadcast.emit('typing', { name, isTyping });
   }

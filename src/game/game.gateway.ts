@@ -27,10 +27,11 @@ export class GameGateway {
   @SubscribeMessage('join')
   async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
     user.id = client.id;
-    const Name = this.gameService.identify(user, client.id);
-    this.server.emit('join', Name);
+    this.gameService.joinRoom(user);
 
-    if (this.readyToStart()) {
+    this.server.emit('join', this.gameService.getRoomUsers());
+
+    if (this.gameService.readyToStart()) {
       //calculate round and user turn
       const { users, round } = this.gameService.getCurrentLeadAndRaund();
 
@@ -53,7 +54,7 @@ export class GameGateway {
     //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
 
-    this.server.emit('roundStarted', {
+    this.server.emit('turnStarted', {
       round: round,
       currentLead: users[round],
       allPlayers: users,
@@ -64,14 +65,7 @@ export class GameGateway {
     //
   }
 
-  isRoundStarted = () => this.timeOut;
-
-  readyToStart = () =>
-    this.gameService.getClientsCount() >= 2 && !this.isRoundStarted();
-
   startTimer() {
-    const isRoundStarted =
-      !this.timeOut && this.gameService.getClientsCount() >= 2;
     //if (!isRoundStarted) {
     this.timeOut = setTimeout(() => {
       this.nextRound();
@@ -91,7 +85,7 @@ export class GameGateway {
     this.gameService.deleteUser(client.id);
     client.disconnect();
     this.server.emit('usersLeaved', {
-      users: Object.values(this.gameService.clientIdObj),
+      users: this.gameService.getRoomUsers(),
     });
   }
 }
