@@ -3,14 +3,21 @@ import { User } from 'src/messages/entities/user.entity';
 
 @Injectable()
 export class GameService {
-  clientIdObj = {};
+  timeOut: NodeJS.Timeout;
+  config: any;
+  private room = {
+    id: -1,
+    users: [],
+  };
   round = 0;
   lead: User[];
 
-  identify(user: User, clientId: string) {
-    this.clientIdObj[clientId] = user;
-    // return userName;
-    return Object.values(this.clientIdObj);
+  joinRoom(user: User) {
+    this.room.users.push(user);
+  }
+
+  getRoomUsers() {
+    return this.room.users;
   }
 
   changeRound() {
@@ -19,30 +26,32 @@ export class GameService {
   }
 
   getCurrentLeadAndRaund() {
-    const users: User[] = Object.values(this.clientIdObj);
-
     return {
-      users: users,
+      users: this.getRoomUsers(),
       round: this.round,
     };
   }
+
   getClientsCount() {
-    return Object.values(this.clientIdObj).length;
+    return this.room.users.length;
   }
 
-  getClientByName(clientId: string) {
-    return this.clientIdObj[clientId].name;
+  getRoomUser(clientId: string): User {
+    return this.room.users.filter((u) => u.id === clientId)[0];
   }
+
   deleteUser(id: string) {
-    delete this.clientIdObj[id];
+    this.room.users = this.room.users.filter((u) => u.id !== id);
   }
 
   calculateScore() {
-    for (const client in this.clientIdObj) {
-      if (Object.prototype.hasOwnProperty.call(this.clientIdObj, client)) {
-        this.clientIdObj[client].currentScore += 500;
-      }
-    }
-    return Object.values(this.clientIdObj);
+    this.room.users.forEach((u) => {
+      u.currentScore += 500;
+    });
+    return this.room.users;
   }
+
+  isRoundStarted = () => this.timeOut;
+
+  readyToStart = () => this.getClientsCount() >= 2 && !this.isRoundStarted();
 }

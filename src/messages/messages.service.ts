@@ -19,7 +19,7 @@ export class MessagesService {
 
   async create(createMessageDto: CreateMessageDto, clientId: string) {
     const message = {
-      name: this.gameService.getClientByName(clientId),
+      name: this.gameService.getRoomUser(clientId)?.name,
       text: createMessageDto.text,
     };
     this.messages.push(message);
@@ -37,7 +37,7 @@ export class MessagesService {
   }
 
   removeMessage(clientId: string, text: string) {
-    const clientName = this.gameService.getClientByName(clientId);
+    const clientName = this.gameService.getRoomUser(clientId)?.name;
 
     const Index = this.messages.findIndex(
       (message) => message.name === clientName && message.text === text,
