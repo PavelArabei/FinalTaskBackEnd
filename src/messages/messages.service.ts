@@ -7,61 +7,19 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message, MessageDocument } from './schemas/message.scheme';
 import { User } from './entities/user.entity';
 import { words } from './const';
+import { GameService } from 'src/game/game.service';
 
 @Injectable()
 export class MessagesService {
-  calculateScore() {
-    for (const client in this.clientIdObj) {
-      if (Object.prototype.hasOwnProperty.call(this.clientIdObj, client)) {
-        this.clientIdObj[client].currentScore += 500;
-      }
-    }
-    return Object.values(this.clientIdObj);
-  }
-
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
-  ) {}
+    private gameService: GameService,
+  ) { }
   messages: Message[] = [];
-  clientIdObj = {};
-  round = 0;
-  lead: User[];
-
-  identify(user: User, clientId: string) {
-    this.clientIdObj[clientId] = user;
-    // return userName;
-    return Object.values(this.clientIdObj);
-  }
-
-  changeRound() {
-    this.round++;
-    if (this.getClientsCount() < this.round) this.round = 0;
-  }
-
-  getCurrentLeadAndRaund() {
-    const users: User[] = Object.values(this.clientIdObj);
-
-    return {
-      users: users,
-      round: this.round,
-    };
-  }
-  getClientsCount() {
-    return Object.values(this.clientIdObj).length;
-  }
-
-  getClientByName(clientId: string) {
-    return this.clientIdObj[clientId].name;
-  }
 
   async create(createMessageDto: CreateMessageDto, clientId: string) {
-    //const newMessage = await new this.messageModel(createMessageDto);
-    //console.log(newMessage);
-
-    //const aLLusers = await this.messageModel.find().exec();
-
     const message = {
-      name: this.getClientByName(clientId),
+      name: this.gameService.getRoomUser(clientId)?.name,
       text: createMessageDto.text,
     };
     this.messages.push(message);
@@ -79,7 +37,7 @@ export class MessagesService {
   }
 
   removeMessage(clientId: string, text: string) {
-    const clientName = this.getClientByName(clientId);
+    const clientName = this.gameService.getRoomUser(clientId)?.name;
 
     const Index = this.messages.findIndex(
       (message) => message.name === clientName && message.text === text,
@@ -88,9 +46,5 @@ export class MessagesService {
 
     this.messages.splice(Index, 1);
     return this.messages;
-  }
-
-  deleteUser(id: string) {
-    delete this.clientIdObj[id];
   }
 }
