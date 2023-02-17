@@ -54,7 +54,7 @@ export class GameGateway {
     //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
 
-    this.server.emit('turnStarted', {
+    this.server.emit('roundStarted', {
       round: round,
       currentLead: users[round],
       allPlayers: users,
