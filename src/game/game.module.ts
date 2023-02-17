@@ -6,4 +6,4 @@ import { GameService, GameGateway } from './';
   imports: [],
   exports: [GameService],
 })
-export class GameModule { }
+export class GameModule {}

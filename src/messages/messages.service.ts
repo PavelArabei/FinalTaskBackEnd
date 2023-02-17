@@ -6,7 +6,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message, MessageDocument } from './schemas/message.scheme';
 import { User } from './entities/user.entity';
-import { words } from './const';
+import { words } from '../game/const';
 import { GameService } from 'src/game/game.service';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class MessagesService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
     private gameService: GameService,
-  ) { }
+  ) {}
   messages: Message[] = [];
 
   async create(createMessageDto: CreateMessageDto, clientId: string) {
