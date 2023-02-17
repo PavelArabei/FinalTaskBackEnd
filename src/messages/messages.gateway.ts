@@ -11,7 +11,6 @@ import { Server, Socket } from 'socket.io';
 import { ConnectedSocket } from '@nestjs/websockets/decorators';
 import { GameService } from 'src/game/game.service';
 
-
 class CanvasStep {
   coords: {
     x: number;
@@ -41,8 +40,6 @@ export class MessagesGateway {
     @MessageBody() cavasData: CanvasStep[],
     @ConnectedSocket() client: Socket,
   ) {
-    console.log(1111);
-    console.log(client.id);
     this.server.emit('message', cavasData);
   }
 
