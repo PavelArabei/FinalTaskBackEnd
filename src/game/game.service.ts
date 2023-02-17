@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/messages/entities/user.entity';
+import { words } from './const';
 
 @Injectable()
 export class GameService {
@@ -11,6 +12,7 @@ export class GameService {
   };
   round = 0;
   lead: User[];
+  word: string;
 
   joinRoom(user: User) {
     this.room.users.push(user);
@@ -22,7 +24,7 @@ export class GameService {
 
   changeRound() {
     this.round++;
-    if (this.getClientsCount() < this.round) this.round = 0;
+    if (this.getClientsCount() <= this.round) this.round = 0;
   }
 
   getCurrentLeadAndRaund() {
@@ -54,4 +56,27 @@ export class GameService {
   isRoundStarted = () => this.timeOut;
 
   readyToStart = () => this.getClientsCount() >= 2 && !this.isRoundStarted();
+
+  getThreeRandomWord() {
+    const CurrentWords: string[] = [];
+    const wordExist = {};
+    for (let i = 0; i < 3; i++) {
+      const word = words[Math.floor(Math.random() * words.length)];
+      if (wordExist[word]) {
+        i--;
+        continue;
+      }
+      wordExist[word] = word;
+      CurrentWords.push(word);
+    }
+
+    return CurrentWords;
+  }
+
+  setCurrentWord(word) {
+    this.word = word;
+  }
+  getCurrentWord(): string {
+    return this.word;
+  }
 }

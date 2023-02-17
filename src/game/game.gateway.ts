@@ -28,6 +28,7 @@ export class GameGateway {
   async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
     user.id = client.id;
     this.gameService.joinRoom(user);
+    this.server.to(user?.id).emit('userId', user.id);
 
     this.server.emit('join', this.gameService.getRoomUsers());
 
@@ -35,28 +36,38 @@ export class GameGateway {
       //calculate round and user turn
       const { users, round } = this.gameService.getCurrentLeadAndRaund();
 
-      this.server.emit('roundStarted', {
-        round: round,
-        currentLead: users[round],
-        allPlayers: users,
-        // userCount: this.messagesService.getClientsCount(),
-      });
-      this.startTimer();
+      this.chooseWordForRound(users[round]);
+
+      //!this.startTimer();
     }
+  }
+
+  async chooseWordForRound(lead) {
+    const Words = this.gameService.getThreeRandomWord();
+    this.server.to(lead?.id).emit('chooseWordForRound', Words);
+  }
+
+  @SubscribeMessage('wordIsChosen')
+  async WordIsChosen(
+    @MessageBody() word: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    this.gameService.setCurrentWord(word);
+    this.startRound();
   }
 
   @SubscribeMessage('roundStarted')
   async startRound() {
-    console.log(77888);
-
-    this.gameService.changeRound();
+    //this.gameService.changeRound();
     //if (this.readyToStart()) {
     //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    const CurrentWord = this.gameService.getCurrentWord();
 
     this.server.emit('roundStarted', {
+      word: CurrentWord,
       round: round,
-      currentLead: users[round],
+      lead: users[round],
       allPlayers: users,
       // userCount: this.messagesService.getClientsCount(),
     });
@@ -78,6 +89,12 @@ export class GameGateway {
     this.server.emit('roundFinished', {
       users: this.gameService.calculateScore(),
     });
+    //!next round 
+    //!this.gameService.changeRound();
+    //!const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    //!console.log(round);
+
+    //!this.chooseWordForRound(users[round]);
   }
 
   @SubscribeMessage('usersLeaved')
