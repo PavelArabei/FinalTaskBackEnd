@@ -9,6 +9,7 @@ import { ConnectedSocket } from '@nestjs/websockets/decorators';
 import { config } from '../config';
 import { GameService } from './game.service';
 import { User } from 'src/messages/entities/user.entity';
+import { Canvas } from './dto/canvas.dto';
 
 const { DEFAULT_PLAYERS, DEFAULT_TIMER } = config;
 
@@ -89,12 +90,12 @@ export class GameGateway {
     this.server.emit('roundFinished', {
       users: this.gameService.calculateScore(),
     });
-    //!next round 
-    //!this.gameService.changeRound();
-    //!const { users, round } = this.gameService.getCurrentLeadAndRaund();
-    //!console.log(round);
+    //!next round
+    //this.gameService.changeRound();
+    //const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    //console.log(round);
 
-    //!this.chooseWordForRound(users[round]);
+    //this.chooseWordForRound(users[round]);
   }
 
   @SubscribeMessage('usersLeaved')
@@ -104,5 +105,13 @@ export class GameGateway {
     this.server.emit('usersLeaved', {
       users: this.gameService.getRoomUsers(),
     });
+  }
+
+  @SubscribeMessage('canvasShare')
+  async getCanvasData(
+    @MessageBody() cavasData: Canvas[],
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.broadcast.emit('canvasShare', cavasData);
   }
 }
