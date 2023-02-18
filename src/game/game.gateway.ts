@@ -63,7 +63,7 @@ export class GameGateway {
     //if (this.readyToStart()) {
     //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
-    const CurrentWord = this.gameService.getCurrentWord(); co
+    const CurrentWord = this.gameService.getCurrentWord();
 
     this.server.emit('roundStarted', {
       word: CurrentWord,
