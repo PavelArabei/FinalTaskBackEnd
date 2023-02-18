@@ -11,15 +11,6 @@ import { Server, Socket } from 'socket.io';
 import { ConnectedSocket } from '@nestjs/websockets/decorators';
 import { GameService } from 'src/game/game.service';
 
-class CanvasStep {
-  coords: {
-    x: number;
-    y: number;
-  }[];
-  lineWidth?: number;
-  strokeStyle?: string | CanvasGradient | CanvasPattern;
-}
-
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -34,14 +25,6 @@ export class MessagesGateway {
     private readonly messagesService: MessagesService,
     private gameService: GameService,
   ) {}
-
-  @SubscribeMessage('canvasShare')
-  async getCanvasData(
-    @MessageBody() cavasData: CanvasStep[],
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.server.emit('message', cavasData);
-  }
 
   @SubscribeMessage('createMessage')
   async create(
