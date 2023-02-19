@@ -34,13 +34,18 @@ export class GameGateway {
     this.server.emit('join', this.gameService.getRoomUsers());
 
     if (this.gameService.readyToStart()) {
-      //calculate round and user turn
-      const { users, round } = this.gameService.getCurrentLeadAndRaund();
-
-      this.chooseWordForRound(users[round]);
-
+      const lead = this.gameService.getLead();
+      console.log(lead);
+      const playersCount = this.gameService.getClientsCount();
+      this.server.to(lead.id).emit('startTheGame', playersCount);
       //!this.startTimer();
     }
+  }
+
+  @SubscribeMessage('startTheGame')
+  async startTheGame() {
+    const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    this.chooseWordForRound(users[round]);
   }
 
   async chooseWordForRound(lead) {
