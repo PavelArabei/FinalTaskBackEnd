@@ -114,4 +114,13 @@ export class GameGateway {
   ) {
     client.broadcast.emit('canvasShare', cavasData);
   }
+
+  @SubscribeMessage('wordForWin')
+  async checkTheWord(
+    @MessageBody() word: string,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const isWordTrue = this.gameService.isWordTrue(word);
+    client.emit('wordForWin', isWordTrue);
+  }
 }
