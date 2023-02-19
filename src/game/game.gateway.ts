@@ -91,11 +91,11 @@ export class GameGateway {
       users: this.gameService.calculateScore(),
     });
     //!next round
-    //this.gameService.changeRound();
-    //const { users, round } = this.gameService.getCurrentLeadAndRaund();
-    //console.log(round);
+    this.gameService.changeRound();
+    const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    console.log(round);
 
-    //this.chooseWordForRound(users[round]);
+    this.chooseWordForRound(users[round]);
   }
 
   @SubscribeMessage('usersLeaved')
@@ -122,5 +122,14 @@ export class GameGateway {
   ) {
     const isWordTrue = this.gameService.isWordTrue(word);
     client.emit('wordForWin', isWordTrue);
+    if (isWordTrue) {
+      this.gameService.addWinner();
+      this.gameService.addPoinsToUser(client.id);
+      const ReadyToNextRound = this.gameService.isAllPlayersAnsweredRight();
+      if (ReadyToNextRound) {
+        clearTimeout(this.timeOut);
+        this.nextRound();
+      }
+    }
   }
 }

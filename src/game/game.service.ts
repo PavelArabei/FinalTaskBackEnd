@@ -11,8 +11,8 @@ export class GameService {
     users: [],
   };
   round = 0;
-  lead: User[];
   word: string;
+  winnersAtTheRound = 0;
 
   joinRoom(user: User) {
     this.room.users.push(user);
@@ -25,6 +25,7 @@ export class GameService {
   changeRound() {
     this.round++;
     if (this.getClientsCount() <= this.round) this.round = 0;
+    this.winnersAtTheRound = 0;
   }
 
   getCurrentLeadAndRaund() {
@@ -32,6 +33,9 @@ export class GameService {
       users: this.getRoomUsers(),
       round: this.round,
     };
+  }
+  getLead() {
+    return this.getRoomUsers()[this.round];
   }
 
   getClientsCount() {
@@ -47,10 +51,19 @@ export class GameService {
   }
 
   calculateScore() {
-    this.room.users.forEach((u) => {
-      u.currentScore += 500;
-    });
+    //this.room.users.forEach((u) => {
+    //  u.currentScore += 500;
+    //});
     return this.room.users;
+  }
+  addPoinsToUser(id: string) {
+    const pointForWin = 500;
+    const userIndex = this.room.users.findIndex((user) => id === user.id);
+    const user = this.room.users[userIndex];
+    user.currentScore += pointForWin;
+    const pointsForLead = pointForWin / (this.room.users.length - 1);
+    const lead = this.getLead();
+    lead.currentScore += pointsForLead;
   }
 
   isRoundStarted = () => this.timeOut;
@@ -76,10 +89,20 @@ export class GameService {
   setCurrentWord(word) {
     this.word = word;
   }
+
   getCurrentWord(): string {
     return this.word;
   }
+
   isWordTrue(word: string) {
     return this.word === word;
+  }
+
+  addWinner() {
+    this.winnersAtTheRound++;
+  }
+
+  isAllPlayersAnsweredRight() {
+    return this.getClientsCount() - 1 === this.winnersAtTheRound;
   }
 }
