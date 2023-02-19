@@ -79,4 +79,7 @@ export class GameService {
   getCurrentWord(): string {
     return this.word;
   }
+  isWordTrue(word: string) {
+    return this.word === word;
+  }
 }
