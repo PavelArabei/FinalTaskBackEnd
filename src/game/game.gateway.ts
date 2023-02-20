@@ -92,15 +92,12 @@ export class GameGateway {
   }
 
   nextRound() {
+    this.gameService.changeRound();
+    const lead = this.gameService.getLead();
     this.server.emit('roundFinished', {
       users: this.gameService.calculateScore(),
+      lead: lead,
     });
-    //!next round
-    this.gameService.changeRound();
-    const { users, round } = this.gameService.getCurrentLeadAndRaund();
-    console.log(round);
-
-    this.chooseWordForRound(users[round]);
   }
 
   @SubscribeMessage('usersLeaved')
@@ -136,5 +133,12 @@ export class GameGateway {
         this.nextRound();
       }
     }
+  }
+
+  @SubscribeMessage('playerReadyToStartNextRound')
+  async playerReadyToStartNextRound() {
+    this.server.emit('playerReadyToStartNextRound');
+    const lead = this.gameService.getLead();
+    this.chooseWordForRound(lead);
   }
 }
