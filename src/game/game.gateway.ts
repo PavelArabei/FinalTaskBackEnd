@@ -35,7 +35,6 @@ export class GameGateway {
 
     if (this.gameService.readyToStart()) {
       const lead = this.gameService.getLead();
-      console.log(lead);
       const playersCount = this.gameService.getClientsCount();
       this.server.to(lead.id).emit('startTheGame', playersCount);
       //!this.startTimer();
@@ -44,8 +43,9 @@ export class GameGateway {
 
   @SubscribeMessage('startTheGame')
   async startTheGame() {
-    const { users, round } = this.gameService.getCurrentLeadAndRaund();
-    this.chooseWordForRound(users[round]);
+    //const { users, round } = this.gameService.getCurrentLeadAndRaund();
+    const lead = this.gameService.getLead();
+    this.chooseWordForRound(lead);
   }
 
   async chooseWordForRound(lead) {
@@ -69,12 +69,14 @@ export class GameGateway {
     //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
     const CurrentWord = this.gameService.getCurrentWord();
-
+    const lead = this.gameService.getLead();
+    const allRounds = this.gameService.getAllRound();
     this.server.emit('roundStarted', {
       word: CurrentWord,
       round: round,
-      lead: users[round],
+      lead: lead,
       allPlayers: users,
+      allRounds: allRounds,
       // userCount: this.messagesService.getClientsCount(),
     });
     this.startTimer();
@@ -95,7 +97,7 @@ export class GameGateway {
     this.gameService.changeRound();
     const lead = this.gameService.getLead();
     this.server.emit('roundFinished', {
-      users: this.gameService.calculateScore(),
+      users: this.gameService.getRoomUsers(),
       lead: lead,
     });
   }
@@ -128,11 +130,29 @@ export class GameGateway {
       this.gameService.addWinner();
       this.gameService.addPoinsToUser(client.id);
       const ReadyToNextRound = this.gameService.isAllPlayersAnsweredRight();
+      if (this.gameService.isFinalRound()) {
+        const sortUsers = this.gameService
+          .getRoomUsers()
+          .sort((a, b) => a.currentScore - b.currentScore);
+        clearTimeout(this.timeOut);
+        console.log(sortUsers);
+
+        this.server.emit('gameFinished', {
+          users: sortUsers,
+        });
+        return;
+      }
       if (ReadyToNextRound) {
         clearTimeout(this.timeOut);
         this.nextRound();
       }
     }
+  }
+  @SubscribeMessage('gameFinished')
+  async finishGame() {
+    this.server.emit('endGame');
+    this.gameService.clearAll();
+    //
   }
 
   @SubscribeMessage('playerReadyToStartNextRound')

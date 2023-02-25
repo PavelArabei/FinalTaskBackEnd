@@ -10,9 +10,18 @@ export class GameService {
     id: -1,
     users: [],
   };
-  round = 0;
+  round = 1;
   word: string;
   winnersAtTheRound = 0;
+  allRaunds = 3;
+
+  clearAll() {
+    this.round = 1;
+    this.word = '';
+    this.room.users = [];
+    this.winnersAtTheRound = 0;
+    this.allRaunds = 3;
+  }
 
   joinRoom(user: User) {
     this.room.users.push(user);
@@ -24,8 +33,10 @@ export class GameService {
 
   changeRound() {
     this.round++;
-    if (this.getClientsCount() <= this.round) this.round = 0;
     this.winnersAtTheRound = 0;
+  }
+  getAllRound() {
+    return this.allRaunds;
   }
 
   getCurrentLeadAndRaund() {
@@ -35,7 +46,7 @@ export class GameService {
     };
   }
   getLead() {
-    return this.getRoomUsers()[this.round];
+    return this.getRoomUsers()[(this.round - 1) % this.getClientsCount()];
   }
 
   getClientsCount() {
@@ -50,12 +61,6 @@ export class GameService {
     this.room.users = this.room.users.filter((u) => u.id !== id);
   }
 
-  calculateScore() {
-    //this.room.users.forEach((u) => {
-    //  u.currentScore += 500;
-    //});
-    return this.room.users;
-  }
   addPoinsToUser(id: string) {
     const pointForWin = 500;
     const userIndex = this.room.users.findIndex((user) => id === user.id);
@@ -67,6 +72,7 @@ export class GameService {
   }
 
   isRoundStarted = () => this.timeOut;
+  isFinalRound = () => this.round === this.allRaunds;
 
   readyToStart = () => this.getClientsCount() >= 2 && !this.isRoundStarted();
 
