@@ -68,4 +68,13 @@ export class MessagesGateway {
 
     client.broadcast.emit('typing', { name, isTyping });
   }
+
+  @SubscribeMessage('usersLeaved')
+  async clearMessager() {
+    const userCount = this.gameService.getClientsCount() - 1;
+    if (userCount === 0) {
+      const messages = this.messagesService.clearMesseges();
+      this.server.emit('removeMessage', messages);
+    }
+  }
 }
