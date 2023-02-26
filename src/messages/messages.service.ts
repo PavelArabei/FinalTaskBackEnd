@@ -21,6 +21,7 @@ export class MessagesService {
     const message = {
       name: this.gameService.getRoomUser(clientId)?.name,
       text: createMessageDto.text,
+      id: clientId,
     };
     this.messages.push(message);
 
@@ -40,11 +41,19 @@ export class MessagesService {
     const clientName = this.gameService.getRoomUser(clientId)?.name;
 
     const Index = this.messages.findIndex(
-      (message) => message.name === clientName && message.text === text,
+      (message) =>
+        message.name === clientName &&
+        message.text === text &&
+        message.id === clientId,
     );
     if (Index === -1) return -1;
 
     this.messages.splice(Index, 1);
+    return this.messages;
+  }
+
+  clearMesseges() {
+    this.messages = [];
     return this.messages;
   }
 }

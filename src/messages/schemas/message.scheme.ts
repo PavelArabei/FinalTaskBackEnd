@@ -10,6 +10,9 @@ export class Message {
 
   @Prop()
   text: string;
+
+  @Prop()
+  id: string;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
