@@ -106,6 +106,10 @@ export class GameGateway {
   async userLeave(@ConnectedSocket() client: Socket) {
     this.gameService.deleteUser(client.id);
     client.disconnect();
+    if (this.gameService.getClientsCount() <= 1) {
+      this.gameService.clearAll();
+      clearTimeout(this.timeOut);
+    }
     this.server.emit('usersLeaved', {
       users: this.gameService.getRoomUsers(),
     });
@@ -152,6 +156,7 @@ export class GameGateway {
   async finishGame() {
     this.server.emit('endGame');
     this.gameService.clearAll();
+    clearTimeout(this.timeOut);
     //
   }
 
