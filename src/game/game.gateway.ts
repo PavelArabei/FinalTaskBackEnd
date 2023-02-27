@@ -27,6 +27,10 @@ export class GameGateway {
 
   @SubscribeMessage('join')
   async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
+    if (this.server.engine.clientsCount === 1) {
+      this.gameService.clearAll();
+    }
+    
     user.id = client.id;
     this.gameService.joinRoom(user);
     this.server.to(user?.id).emit('userId', user.id);
