@@ -27,6 +27,10 @@ export class GameGateway {
 
   @SubscribeMessage('join')
   async joinRoom(@MessageBody() user: User, @ConnectedSocket() client: Socket) {
+    if (this.server.engine.clientsCount === 1) {
+      this.gameService.clearAll();
+    }
+
     user.id = client.id;
     this.gameService.joinRoom(user);
     this.server.to(user?.id).emit('userId', user.id);
@@ -37,13 +41,11 @@ export class GameGateway {
       const lead = this.gameService.getLead();
       const playersCount = this.gameService.getClientsCount();
       this.server.to(lead.id).emit('startTheGame', playersCount);
-      //!this.startTimer();
     }
   }
 
   @SubscribeMessage('startTheGame')
   async startTheGame() {
-    //const { users, round } = this.gameService.getCurrentLeadAndRaund();
     const lead = this.gameService.getLead();
     this.chooseWordForRound(lead);
   }
@@ -64,9 +66,6 @@ export class GameGateway {
 
   @SubscribeMessage('roundStarted')
   async startRound() {
-    //this.gameService.changeRound();
-    //if (this.readyToStart()) {
-    //calculate round and user turn
     const { users, round } = this.gameService.getCurrentLeadAndRaund();
     const CurrentWord = this.gameService.getCurrentWord();
     const lead = this.gameService.getLead();
@@ -77,20 +76,15 @@ export class GameGateway {
       lead: lead,
       allPlayers: users,
       allRounds: allRounds,
-      // userCount: this.messagesService.getClientsCount(),
     });
     this.startTimer();
-    //}
-    //
   }
 
   startTimer() {
-    //if (!isRoundStarted) {
     this.timeOut = setTimeout(() => {
       this.nextRound();
       clearTimeout(this.timeOut);
     }, DEFAULT_TIMER);
-    //}
   }
 
   nextRound() {
@@ -157,7 +151,6 @@ export class GameGateway {
     this.server.emit('endGame');
     this.gameService.clearAll();
     clearTimeout(this.timeOut);
-    //
   }
 
   @SubscribeMessage('playerReadyToStartNextRound')
